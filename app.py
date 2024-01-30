@@ -67,7 +67,7 @@ def insert_event(request_id, response, exception):
         print(exception)
     else:
         print(response)
-
+ 
 def get_posts_after_id(url):
     post_id_regex = r"/(\d+)/?$"
     match = re.search(post_id_regex, url)
