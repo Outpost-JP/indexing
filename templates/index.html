@@ -13,9 +13,8 @@
         <button type="submit" id="submitButton">送信</button>
     </form>
 
-    {% if processed_data %}
-    <p>処理結果: {{ processed_data }}</p>
-    {% endif %}
+    <!-- 処理結果を表示するための要素 -->
+    <div id="result"></div>
 
     <script src="{{ url_for('static', filename='js/script.js') }}"></script> <!-- JavaScriptファイルのリンク -->
 </body>

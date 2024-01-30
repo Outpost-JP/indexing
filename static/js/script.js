@@ -14,16 +14,15 @@ document.getElementById('urlForm').addEventListener('submit', function(event) {
         xhr.onreadystatechange = function() {
             if (this.readyState === XMLHttpRequest.DONE) {
                 if (this.status === 200) {
-                    // レスポンスが返ってきたときの処理
-                    alert('サーバーが応答しました: ' + this.responseText);
+                    // 処理結果をページに表示
+                    document.getElementById('result').innerHTML = this.responseText;
                 } else {
-                    // エラー処理
-                    alert('エラーが発生しました: ' + this.status);
+                    // エラーが発生した場合
+                    document.getElementById('result').innerHTML = 'エラーが発生しました: ステータスコード ' + this.status;
                 }
             }
         };
 
-        // リクエストの本文にデータを設定して送信
         xhr.send('input=' + encodeURIComponent(url));
     }
 });

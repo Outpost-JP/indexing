@@ -42,10 +42,13 @@ def process():
     input_data = request.form['input']
     # URLから投稿IDを取得し、そのID以降の投稿を取得する
     posts = get_posts_after_id(input_data)
+    if isinstance(posts, str):  # エラーメッセージが返された場合
+        return posts, 400  # HTTPステータスコード400でエラーメッセージを返す
     # 取得した投稿データを処理
     processed_data = process_posts(posts)
-    # 処理結果を表示する
-    return render_template('index.html', processed_data=processed_data)
+    # 処理結果をクライアントに返す
+    return processed_data, 200  # HTTPステータスコード200で処理結果を返す
+    
 
 def process_posts(posts):
     batch = service.new_batch_http_request(callback=insert_event)
@@ -72,35 +75,19 @@ def get_posts_after_id(url):
         after_id = int(match.group(1))
     else:
         return "Invalid URL"
-    
-    # 投稿APIのエンドポイント
-    api_url = f"{api_base_url}/wp-json/wp/v2/posts"
 
-    # 取得する投稿のパラメータ
-    params = {
-        "per_page": 100,
-        "after": after_id
-    }
+    # カスタムAPIエンドポイントのURL
+    api_url = f"{api_base_url}/wp-json/my_namespace/v1/posts-after/{after_id}"
 
-    urls_list = []  # 投稿のURLを保存するリスト
-
-    # 最初の100件を取得
-    r = requests.get(api_url, params=params)
+    # APIリクエストを送信
+    r = requests.get(api_url)
     if r.status_code == 200:
-        posts = r.json()
-        for post in posts:
-            urls_list.append(post['link'])  # 各投稿のURLをリストに追加
-
-        # 次のページがあれば取得を続ける
-        while r.links.get("next"):
-            r = requests.get(r.links["next"]["url"])
-            posts = r.json()
-            for post in posts:
-                urls_list.append(post['link'])  # 各投稿のURLをリストに追加
+        urls_list = r.json()  # APIから直接URLのリストを取得
     else:
-        return "Failed to retrieve posts"
+        return f"Failed to retrieve posts, status code: {r.status_code}"
 
     return urls_list
+
 
 if __name__ == '__main__':
     app.run()
