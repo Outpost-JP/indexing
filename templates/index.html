@@ -7,10 +7,15 @@
 </head>
 <body>
     <br>ここに、レビュー待ちから公開済みにした最初の記事のURLを入力してください。<br>
-    <form id="urlForm">
+    <!--ここにアクションを指定すると、送信ボタンを押したときにそのアクションに対してPOSTリクエストが送られる-->
+    <form id="urlForm" action="/process" method="post">
         <input type="text" id="urlInput" placeholder="URLを入力してください">
         <button type="submit" id="submitButton">送信</button>
     </form>
+
+    {% if processed_data %}
+    <p>処理結果: {{ processed_data }}</p>
+    {% endif %}
 
     <script src="{{ url_for('static', filename='js/script.js') }}"></script> <!-- JavaScriptファイルのリンク -->
 </body>

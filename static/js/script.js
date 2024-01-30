@@ -12,9 +12,14 @@ document.getElementById('urlForm').addEventListener('submit', function(event) {
         xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
 
         xhr.onreadystatechange = function() {
-            if (this.readyState === XMLHttpRequest.DONE && this.status === 200) {
-                // レスポンスが返ってきたときの処理をここに書く
-                alert('サーバーが応答しました: ' + this.responseText);
+            if (this.readyState === XMLHttpRequest.DONE) {
+                if (this.status === 200) {
+                    // レスポンスが返ってきたときの処理
+                    alert('サーバーが応答しました: ' + this.responseText);
+                } else {
+                    // エラー処理
+                    alert('エラーが発生しました: ' + this.status);
+                }
             }
         };
 
