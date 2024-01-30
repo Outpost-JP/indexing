@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>URL送信フォーム</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"> <!-- CSSファイルのリンク -->
+</head>
+<body>
+    <br>ここに、レビュー待ちから公開済みにした最初の記事のURLを入力してください。<br>
+    <form id="urlForm">
+        <input type="text" id="urlInput" placeholder="URLを入力してください">
+        <button type="submit" id="submitButton">送信</button>
+    </form>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script> <!-- JavaScriptファイルのリンク -->
+</body>
+</html>

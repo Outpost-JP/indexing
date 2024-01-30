@@ -1,9 +1,14 @@
-from flask import Flask, request
-from flask_cors import CORS
+from flask import Flask, request, render_template
 from  markupsafe import escape
-app = Flask(__name__)
 import re
 import requests
+
+app = Flask(__name__)  # Flaskアプリのインスタンスを作成
+
+@app.route('/')  # ルートURLにアクセスがあった場合
+def index():
+    return render_template('index.html')  # index.htmlをレンダリングして返す
+
 
 @app.route('/process', methods=['POST'])
 def process():
