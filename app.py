@@ -19,6 +19,10 @@ encoded_key = os.getenv("JSON_KEY_FILE_BASE64")
 decoded_key = base64.b64decode(encoded_key)
 service_account_info = json.loads(decoded_key)
 
+# 例外を定義
+class PostRetrievalError(Exception):
+    pass
+
 # クレデンシャルを作成し、Googleサービスをビルド
 credentials = ServiceAccountCredentials.from_json_keyfile_dict(service_account_info, scopes=SCOPES)
 http = credentials.authorize(httplib2.Http())
@@ -36,12 +40,10 @@ def index():
 # '/process'エンドポイントにPOSTリクエストがあった場合の処理
 @app.route('/process', methods=['POST'])
 def process():
-    oldest_url = request.form['firstUrlInput']
-    newest_url = request.form['lastUrlInput']
-    posts = get_posts_between_urls(oldest_url, newest_url)
-    if isinstance(posts, str):  # エラーメッセージが返された場合
-        return jsonify({"error": posts}), 400
-    else:
+    try:
+        oldest_url = request.form['firstUrlInput']
+        newest_url = request.form['lastUrlInput']
+        posts = get_posts_between_urls(oldest_url, newest_url)
         processed_urls, skipped_urls = process_posts(posts)
         send_to_ifttt(newest_url)
         return jsonify({
@@ -49,6 +51,8 @@ def process():
             "processed": len(processed_urls),
             "skipped": skipped_urls
         })
+    except PostRetrievalError as e:
+        return jsonify({"error": str(e)}), 502  # または適切なエラーコード
 
 
 # 投稿データを処理する関数
@@ -74,8 +78,17 @@ def insert_event(request_id, response, exception):
     else:
         print(response)
 
+def get_post_date(post_id):
+    api_url = f'{api_base_url}/wp-json/wp/v2/posts/{post_id}&per_page=100'
+    response = requests.get(api_url)
+    if response.status_code == 200:
+        post_data = response.json()
+        return post_data['date']
+    return None
+
 def get_posts_between_urls(oldest_url, newest_url):
     post_id_regex = r"/(\d+)/?$"
+    # URLから投稿IDを抽出
     oldest_match = re.search(post_id_regex, oldest_url)
     newest_match = re.search(post_id_regex, newest_url)
     if oldest_match and newest_match:
@@ -83,17 +96,21 @@ def get_posts_between_urls(oldest_url, newest_url):
         newest_id = int(newest_match.group(1))
     else:
         return "Invalid URL"
+    oldest_post_date = get_post_date(oldest_id)
+    newest_post_date = get_post_date(newest_id)   
 
-    api_url = f"{api_base_url}/wp-json/wp/v2/posts?after={oldest_id}&before={newest_id}"
-    r = requests.get(api_url)
-    if r.status_code == 200:
-        posts = r.json()
-        urls_list = []
-        for post in posts:
-            urls_list.append(post["link"])
-        return urls_list
-    else:
-        return f"Failed to retrieve posts, status code: {r.status_code}"
+    if not oldest_post_date or not newest_post_date:
+        return "日付を取得できませんでした。" 
+    api_url = f'{api_base_url}/wp-json/wp/v2/posts?after={oldest_post_date}&before={newest_post_date}&per_page=100'
+    response = requests.get(api_url)
+
+    if response.status_code != 200:
+        return "APIからのレスポンスが正常ではありません。"
+
+    posts = response.json()
+    post_urls = [post['link'] for post in posts]
+
+    return post_urls
 
 
 # IFTTT WebhookにPOSTリクエストを送信する関数
