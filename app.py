@@ -79,7 +79,7 @@ def insert_event(request_id, response, exception):
         print(response)
 
 def get_post_date(post_id):
-    api_url = f'{api_base_url}/wp-json/wp/v2/posts/{post_id}&per_page=100'
+    api_url = f'{api_base_url}/wp-json/wp/v2/posts/{post_id}'
     response = requests.get(api_url)
     if response.status_code == 200:
         post_data = response.json()
