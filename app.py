@@ -1,5 +1,5 @@
 # 必要なライブラリをインポート
-from flask import Flask, request, render_template
+from flask import Flask, request, render_template, jsonify
 from markupsafe import escape
 import re
 import requests
@@ -36,29 +36,34 @@ def index():
 # '/process'エンドポイントにPOSTリクエストがあった場合の処理
 @app.route('/process', methods=['POST'])
 def process():
-    input_data = request.form['input']  # フォームデータからURLを取得
-    posts = get_posts_after_id(input_data)  # URLから投稿IDを取得し、そのID以降の投稿を取得
+    oldest_url = request.form['oldest_url']
+    newest_url = request.form['newest_url']
+    posts = get_posts_between_urls(oldest_url, newest_url)
     if isinstance(posts, str):  # エラーメッセージが返された場合
-        return posts, 400
-    processed_data = process_posts(posts)  # 取得した投稿データを処理
-    latest_post_url = posts[-1] if posts else None  # 最新の記事を特定
-
-    if latest_post_url:  # 最新の記事があればIFTTT WebhookにPOSTリクエストを送信
-        send_to_ifttt(latest_post_url)
-
-    return processed_data, 200
+        return jsonify({"error": posts}), 400
+    else:
+        processed_urls, skipped_urls = process_posts(posts)
+        return jsonify({
+            "success": True,
+            "processed": len(processed_urls),
+            "skipped": skipped_urls
+        })
 
 # 投稿データを処理する関数
 def process_posts(posts):
     batch = service.new_batch_http_request(callback=insert_event)
+    processed_urls = []
+    skipped_urls = []
     for url in posts:
         if url.startswith("http://") or url.startswith("https://"):  # URLのフォーマットを検証
             batch.add(service.urlNotifications().publish(
                 body={"url": url, "type": "URL_UPDATED"}))
+            processed_urls.append(url)
         else:
             print(f"無効なURLがスキップされました: {url}")
+            skipped_urls.append(url)
     batch.execute()
-    return "Processed {} posts".format(len(posts))
+    return processed_urls, skipped_urls
 
 # BatchHttpRequestのコールバック関数
 def insert_event(request_id, response, exception):
@@ -67,25 +72,27 @@ def insert_event(request_id, response, exception):
     else:
         print(response)
 
-# URLから投稿IDを取得し、そのID以降の投稿を取得する関数
-def get_posts_after_id(url):
+def get_posts_between_urls(oldest_url, newest_url):
     post_id_regex = r"/(\d+)/?$"
-    match = re.search(post_id_regex, url)
-    if match:
-        after_id = int(match.group(1))
-        print(f"after_id: {after_id}")
+    oldest_match = re.search(post_id_regex, oldest_url)
+    newest_match = re.search(post_id_regex, newest_url)
+    if oldest_match and newest_match:
+        oldest_id = int(oldest_match.group(1))
+        newest_id = int(newest_match.group(1))
     else:
         return "Invalid URL"
-    # カスタムAPIエンドポイントのURLを変更
-    # /wp-json/wp/v2/posts?per_page=100
-    api_url = f"{api_base_url}/wp-json/wp/v2/posts?per_page=100"  # カスタムAPIエンドポイントのURL変更済み
-    r = requests.get(api_url)  # APIリクエストを送信
+
+    api_url = f"{api_base_url}/wp-json/wp/v2/posts?after={oldest_id}&before={newest_id}"
+    r = requests.get(api_url)
     if r.status_code == 200:
-        urls_list = r.json()  # APIから直接URLのリストを取得
+        posts = r.json()
+        urls_list = []
+        for post in posts:
+            urls_list.append(post["link"])
+        return urls_list
     else:
         return f"Failed to retrieve posts, status code: {r.status_code}"
 
-    return urls_list
 
 # IFTTT WebhookにPOSTリクエストを送信する関数
 def send_to_ifttt(url):
