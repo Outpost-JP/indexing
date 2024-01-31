@@ -1,6 +1,7 @@
 document.getElementById('urlForm').addEventListener('submit', function(event) {
     event.preventDefault(); // フォームの自動送信を防止
-    const url = document.getElementById('urlInput').value; // 入力されたURLを取得
+    const firstUrlInput = document.getElementById('firstUrlInput').value; // 最初のURLを取得
+    const lastUrlInput = document.getElementById('lastUrlInput').value; // 最後のURLを取得
 
     // 確認アラートを表示
     const isConfirmed = confirm('本当に送信しますか？');
@@ -23,6 +24,8 @@ document.getElementById('urlForm').addEventListener('submit', function(event) {
             }
         };
 
-        xhr.send('input=' + encodeURIComponent(url));
+        // 正しいキーを使用してデータをエンコード
+        const data = `firstUrlInput=${encodeURIComponent(firstUrlInput)}&lastUrlInput=${encodeURIComponent(lastUrlInput)}`;
+        xhr.send(data);
     }
 });
