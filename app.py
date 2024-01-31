@@ -36,18 +36,20 @@ def index():
 # '/process'エンドポイントにPOSTリクエストがあった場合の処理
 @app.route('/process', methods=['POST'])
 def process():
-    oldest_url = request.form['oldest_url']
-    newest_url = request.form['newest_url']
+    oldest_url = request.form['firstUrlInput']
+    newest_url = request.form['lastUrlInput']
     posts = get_posts_between_urls(oldest_url, newest_url)
     if isinstance(posts, str):  # エラーメッセージが返された場合
         return jsonify({"error": posts}), 400
     else:
         processed_urls, skipped_urls = process_posts(posts)
+        send_to_ifttt(newest_url)
         return jsonify({
             "success": True,
             "processed": len(processed_urls),
             "skipped": skipped_urls
         })
+
 
 # 投稿データを処理する関数
 def process_posts(posts):

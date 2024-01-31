@@ -1,10 +1,9 @@
-<!-- index.html -->
 <!DOCTYPE html>
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
     <title>indexリクエスト</title>
-    <link rel="stylesheet" href="style.css"> <!-- CSSファイルのリンク -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"> <!-- CSSファイルのリンク -->
 </head>
 <body>
     <div id="instruction">
@@ -18,9 +17,11 @@
         <label for="lastUrlInput">最後のURL:</label>
         <input type="text" id="lastUrlInput" name="lastUrlInput">
         
-        <button type="button" id="submitButton" onclick="submitForm()">送信</button>
-    </form>
+        <button type="submit" id="submitButton">送信</button>
 
-    <script src="script.js"></script> <!-- JavaScriptファイルのリンク -->
+    </form>
+    <!--結果を表示-->
+    <div id="result"></div>
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script> <!-- JavaScriptファイルのリンク --> 
 </body>
 </html>
