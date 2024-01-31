@@ -6,17 +6,14 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"> <!-- CSSファイルのリンク -->
 </head>
 <body>
-    <div id="instruction">
-        ここに、レビュー待ちから公開済みにした最初の記事のURLを入力してください。
-    </div>
 
     <form action="#" method="post" id="urlForm">
-        <label for="firstUrlInput">最初のURL:</label>
+        <label for="firstUrlInput"><strong>最初の</strong>URL:</label>
         <input type="text" id="firstUrlInput" name="firstUrlInput">
 
-        <label for="lastUrlInput">最後のURL:</label>
+        <label for="lastUrlInput"><strong>最後の</strong>URL:</label>
         <input type="text" id="lastUrlInput" name="lastUrlInput">
-        
+        <br></br>
         <button type="submit" id="submitButton">送信</button>
 
     </form>
