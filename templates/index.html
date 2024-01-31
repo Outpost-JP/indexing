@@ -1,21 +1,26 @@
+<!-- index.html -->
 <!DOCTYPE html>
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
     <title>indexリクエスト</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"> <!-- CSSファイルのリンク -->
+    <link rel="stylesheet" href="style.css"> <!-- CSSファイルのリンク -->
 </head>
 <body>
-    <br>ここに、レビュー待ちから公開済みにした最初の記事のURLを入力してください。<br>
-    <!--ここにアクションを指定すると、送信ボタンを押したときにそのアクションに対してPOSTリクエストが送られる-->
-    <form id="urlForm" action="/process" method="post">
-        <input type="text" id="urlInput" placeholder="URLを入力してください">
-        <button type="submit" id="submitButton">送信</button>
+    <div id="instruction">
+        ここに、レビュー待ちから公開済みにした最初の記事のURLを入力してください。
+    </div>
+
+    <form action="#" method="post" id="urlForm">
+        <label for="firstUrlInput">最初のURL:</label>
+        <input type="text" id="firstUrlInput" name="firstUrlInput">
+
+        <label for="lastUrlInput">最後のURL:</label>
+        <input type="text" id="lastUrlInput" name="lastUrlInput">
+        
+        <button type="button" id="submitButton" onclick="submitForm()">送信</button>
     </form>
 
-    <!-- 処理結果を表示するための要素 -->
-    <div id="result"></div>
-
-    <script src="{{ url_for('static', filename='js/script.js') }}"></script> <!-- JavaScriptファイルのリンク -->
+    <script src="script.js"></script> <!-- JavaScriptファイルのリンク -->
 </body>
 </html>
