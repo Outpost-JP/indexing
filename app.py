@@ -44,7 +44,7 @@ def process():
         oldest_url = request.form['firstUrlInput']
         newest_url = request.form['lastUrlInput']
         posts = get_posts_between_urls(oldest_url, newest_url)
-        processed_urls, skipped_urls = process_posts(posts)
+        processed_urls, skipped_urls = process_posts(posts, oldest_url, newest_url)  # 修正点
         send_to_ifttt(newest_url)
         return jsonify({
             "success": True,
@@ -54,22 +54,27 @@ def process():
     except PostRetrievalError as e:
         return jsonify({"error": str(e)}), 502  # または適切なエラーコード
 
-
-# 投稿データを処理する関数
-def process_posts(posts):
+# 投稿データを処理する関数、firstUrlInputとlastUrlInputも含める
+def process_posts(posts, first_url, last_url):
     batch = service.new_batch_http_request(callback=insert_event)
-    processed_urls = []
+    processed_urls = {}
     skipped_urls = []
-    for url in posts:
-        if url.startswith("http://") or url.startswith("https://"):  # URLのフォーマットを検証
+
+    # firstUrlInputとlastUrlInputを処理リストに追加
+    urls_to_process = [first_url, last_url] + posts
+
+    for url in urls_to_process:
+        if url.startswith("http://") or url.startswith("https://"):
             batch.add(service.urlNotifications().publish(
                 body={"url": url, "type": "URL_UPDATED"}))
-            processed_urls.append(url)
+            processed_urls[url] = "URL_UPDATED"
         else:
             print(f"無効なURLがスキップされました: {url}")
             skipped_urls.append(url)
     batch.execute()
     return processed_urls, skipped_urls
+
+
 
 # BatchHttpRequestのコールバック関数
 def insert_event(request_id, response, exception):
